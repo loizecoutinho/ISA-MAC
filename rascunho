@@ -1,0 +1,47 @@
+a := a * M[x]
+
+
+5x7 = 5+5+5+5+5+5+5
+
+MULT0: mar := ir; rd;               # 1000------------
+MULT1: a := ac;rd;
+MULT2: c := mbr; if n then  goto MULT9;
+MULT3: c := c + (-1);
+MULT4: c := inv (c);
+MULT5: c := c+1;
+MULT6: a := a+ac;
+MULT7: c := c + 1; if n then goto MULT6;
+MULT8: goto FETCH0;
+MULT9: alu := a; if n then goto MULT15;
+MULT10: c := c+1;
+MULT11: a := a + ac;
+MULT12: c := c +1; if n then goto MULT11;
+MULT13: a := inv(a);
+MULT14: a := a+1; goto FETCH0;
+MULT15: a := inv(a);
+MULT16: a := a +1;
+MULT17: ac := a; goto MULT5;
+
+DIV0: b := lshift(a);                    # 1001------------
+DIV1: a := lshift(a+a);
+DIV2: a := lshift(a);
+DIV3: a := a +b;
+DIV4: b := lshift(a);
+DIV5: a := lshift(a+a);
+DIV6: a := lshift(a);
+DIV7: a := a +b;
+DIV8: mar := ir; rd;
+DIV9: rd;
+DIV10: ac := mbr;
+DIV11: c := 0;
+DIV12: d := inv(ac);
+DIV13: d := d + 1;
+DIV14: alu := a + d; if n then goto DIV17;
+DIV15: c := c +1;
+DIV16: a := a + d; goto DIV14;
+DIV17: a := c; goto FETCH0;
+                                     
+
+
+
+ADDL, STOL ,LODL
