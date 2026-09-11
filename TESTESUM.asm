@@ -8,6 +8,7 @@ UM: .word 1
 MAIN:  	
 	LOCO 7
 	ECALL
+	MOD
     SUBD UM
     NEG
 	STOD SIZE
