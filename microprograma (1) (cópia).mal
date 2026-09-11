@@ -97,15 +97,16 @@ DECOD12: alu := tir; if n then goto SUBL0;                      # 101x----------
 # Feito por Rommel e Lo
                             
 SUM0: mar := ir; rd;			# 1010------------
-SUM1: rd;
+SUM1: c := inv(ac); rd;
+SUM2: c := c +1;
 SUM2: a := mbr;
 SUM3: b := ir;
 SUM4: b :=  b + 1;
 SUM5: mar := b; rd;
 SUM6: rd;
 SUM7: a := a + mbr;
-SUM8: ac := ac + 1;
-SUM9: alu:= ac;if n then goto SUM4;
+SUM8: c := c + 1;
+SUM9: alu:= c;if n then goto SUM4;
 SUM10: goto FETCH0;
 
 # Mudanças terminam aqui........
@@ -199,8 +200,10 @@ DECOD29: alu := tir; if n then goto NEG0;                       # 1111111111x---
 
 ECALL0: syscall; goto FETCH0;                                   # 11111111110-----
 
-NEG0:   ac := inv(ac);                                          # 11111111111-----
-NEG1:   ac := ac + 1; goto FETCH0;
+MOD0: d := inv(ac);                                             # 11111111111-----
+MOD1: d := d +1;
+MOD2: alu := d; if n then goto FETCH0;
+MOD3: ac := d; goto FETCH0;  
 
 HALT0: ac := lshift (1 + 1);                                     # 0000000000000000
 HALT1: ac := lshift (ac + 1); syscall; goto FETCH0;
