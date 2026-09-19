@@ -89,7 +89,7 @@ DIV17: a := c; goto FETCH0;
                                        
 
 
-DECOD12: alu := tir; if n then goto SUBL0;                      # 101x------------
+DECOD12: alu := tir; if n then goto VSUB0;                      # 101x------------
 
 ################################
 # Mudanças começam aqui.........
@@ -112,8 +112,27 @@ SUM10: goto FETCH0;
 # Mudanças terminam aqui........
 ################################
 
-SUBL0: f := ir + sp;                                            # 1010------------
-SUBL1: mar := f; rd; goto SUBD1;
+#ac : tamanho do vetor ( positivo)
+#c : tamanho do vetor (negativado)
+#b : posição atual de endereço no vetor 
+#a : valor dentro do endereço atual
+#f : imediato 
+
+VSUB0: mar := ir; rd;             # 1010------------
+VSUB1: c := inv(ac);rd;
+VSUB2: c := c +1;
+VSUB3: f := inv(f);
+VSUB4: f := f +1;
+VSUB5: b := ir;
+VSUB6: a := mbr;
+VSUB7: a := a + f;
+VSUB8: mar := b; mbr := a; wr;
+VSUB9: b := b+1;wr;
+VSUB10: mar := b; rd;
+VSUB11: c:= c+1;rd;
+VSUB12: alu:=c;if n then goto VSUB6;
+VSUB13:goto FETCH0;
+
 
 DECOD13: tir := lshift (tir); if n then goto DECOD15;           # 11x-------------
 DECOD14: alu := tir; if n then goto JNZE0;                      # 110x------------
@@ -126,9 +145,40 @@ JNZE1: pc := band (ir, amask); then goto FETCH0;
 
 DECOD15: tir := lshift (tir); if n then goto DECOD16;           # 111x------------
 
-CALL0: sp := sp + (-1);                                         # 1110------------
-CALL1: mar := sp; mbr := pc; wr;
-CALL2: pc := band (ir, amask); wr; goto FETCH0;
+#ac = tamanho do vetor (positivo)
+#a = tamanho do vetor (negativo) / contador do laço externo (percorrer vetor)
+#b =  endereço da posição atual no vetor
+#c = valor presente no endereço da posição atual no vetor
+#d = contador do laço interno (multiplicação)
+#e = preserva o valor presente no endereço da posição atual
+
+
+VQUAD0: mar := ir; rd;                   # 1110------------
+VQUAD1: a := inv(ac); rd;
+VQUAD2: a := a +1;
+VQUAD3: b:=ir;
+VQUAD4: c:=mbr;
+VQUAD5: alu:= c + (-1); if z then goto  VQUAD13;
+VQUAD6: alu:= c + 1; if z then goto VQUAD23;
+VQUAD7: e := c; if n then goto VQUAD20;
+VQUAD8: d := inv(c) ;
+VQUAD9: d := d+1;
+VQUAD10: d:= d+1;
+VQUAD11: c := e + c;
+VQUAD12: d := d+1; if n then goto VQUAD11;
+VQUAD13: mar := b; mbr := c;wr;
+VQUAD14: b:=b+1;wr;
+VQUAD15: mar := b; rd;
+VQUAD16: rd;
+VQUAD17: a := a+1;
+VQUAD18: alu:= a; if n then goto VQUAD4;
+VQUAD19: goto FETCH0;
+VQUAD20: d:= c+1;
+VQUAD21: c := e+ c;
+VQUAD22: d:= d+1; if n then goto VQUAD21;
+VQUAD23: c := inv(c);
+VQUAD24: c := c+1;
+VQUAD25: goto VQUAD13;
 
 DECOD16: tir := lshift (tir); if n then goto DECOD20;           # 1111x-----------
 DECOD17: tir := lshift (tir); if n then goto DECOD19;           # 11110x----------
@@ -196,18 +246,26 @@ DECOD28: tir := lshift(tir); if n then goto DECOD29;            # 111111111x----
 SWAPE0: f := e;                                                 # 1111111110------
 SWAPE1: e := ac; goto SWAP2;
 
-DECOD29: alu := tir; if n then goto NEG0;                       # 1111111111x-----
+DECOD29: tir := lshift(tir); if n then goto DECOD30;             # 1111111111x-----
 
 ECALL0: syscall; goto FETCH0;                                   # 11111111110-----
 
-MOD0: d := inv(ac);                                             # 11111111111-----
+DECOD30: alu := tir; if n then goto MOD0;                      # 11111111111x----
+
+BNEG0: alu := ac; if n then goto BNEG2;                        # 111111111110----                 
+BNEG1: b:= 0; goto FETCH0;
+BNEG2: b:= 1; goto FETCH0;
+                             
+
+MOD0: d := inv(ac);                                             # 111111111111----
 MOD1: d := d +1;
 MOD2: alu := d; if n then goto FETCH0;
 MOD3: ac := d; goto FETCH0;  
+                                      
+                   
 
 HALT0: ac := lshift (1 + 1);                                     # 0000000000000000
 HALT1: ac := lshift (ac + 1); syscall; goto FETCH0;
-
 
 
 
