@@ -1,5 +1,4 @@
-# Esse microprograma substitui a operação ADDL por SUM
-# A operação MULD multiplica ac por um número no espaço de memória especificado
+#microprograma para uma calculadora estatística capaz de calcular o coeficiente de pearson
 
 FETCH0: mar := pc; rd;
 FETCH1: pc := pc + 1; rd;
@@ -48,7 +47,7 @@ DECOD9: tir := lshift (ir + ir); if n then goto DECOD13;        # 1x------------
 DECOD10: tir := lshift (tir); if n then goto DECOD12;           # 10x-------------
 DECOD11: alu := tir; if n then goto DIV0;                      # 100x------------
                                
-
+#multiplicação
 MULT0: mar := ir; rd;               # 1000------------
 MULT1: a := ac;rd;
 MULT2: c := mbr; if n then  goto MULT9;
@@ -68,6 +67,7 @@ MULT15: a := inv(a);
 MULT16: a := a +1;
 MULT17: ac := a; goto MULT5;
 
+#divisão
 DIV0: b := lshift(a);                    # 1001------------
 DIV1: a := lshift(a+a);
 DIV2: a := lshift(a);
@@ -85,17 +85,11 @@ DIV13: d := d + 1;
 DIV14: alu := a + d; if n then goto DIV17;
 DIV15: c := c +1;
 DIV16: a := a + d; goto DIV14;
-DIV17: a := c; goto FETCH0;
-                                       
-
+DIV17: a := c; goto FETCH0;                                      
 
 DECOD12: alu := tir; if n then goto VSUB0;                      # 101x------------
 
-################################
-# Mudanças começam aqui.........
-
-# Feito por Rommel e Lo
-                            
+#soma de valores de dentro de um vetor                          
 SUM0: mar := ir; rd;			# 1010------------
 SUM1: c := inv(ac); rd;
 SUM2: c := c +1;
@@ -109,15 +103,12 @@ SUM8: c := c + 1;
 SUM9: alu:= c;if n then goto SUM4;
 SUM10: goto FETCH0;
 
-# Mudanças terminam aqui........
-################################
-
+###subtração de valores de um vetor por um imediato###
 #ac : tamanho do vetor ( positivo)
 #c : tamanho do vetor (negativado)
 #b : posição atual de endereço no vetor 
 #a : valor dentro do endereço atual
 #f : imediato 
-
 VSUB0: mar := ir; rd;             # 1010------------
 VSUB1: c := inv(ac);rd;
 VSUB2: c := c +1;
@@ -133,7 +124,6 @@ VSUB11: c:= c+1;rd;
 VSUB12: alu:=c;if n then goto VSUB6;
 VSUB13:goto FETCH0;
 
-
 DECOD13: tir := lshift (tir); if n then goto DECOD15;           # 11x-------------
 DECOD14: alu := tir; if n then goto JNZE0;                      # 110x------------
 
@@ -145,14 +135,13 @@ JNZE1: pc := band (ir, amask); then goto FETCH0;
 
 DECOD15: tir := lshift (tir); if n then goto DECOD16;           # 111x------------
 
+###exponenciação ao quadrado de valores de um vetor###
 #ac = tamanho do vetor (positivo)
 #a = tamanho do vetor (negativo) / contador do laço externo (percorrer vetor)
 #b =  endereço da posição atual no vetor
 #c = valor presente no endereço da posição atual no vetor
 #d = contador do laço interno (multiplicação)
 #e = preserva o valor presente no endereço da posição atual
-
-
 VQUAD0: mar := ir; rd;                   # 1110------------
 VQUAD1: a := inv(ac); rd;
 VQUAD2: a := a +1;
@@ -252,22 +241,16 @@ ECALL0: syscall; goto FETCH0;                                   # 11111111110---
 
 DECOD30: alu := tir; if n then goto MOD0;                      # 11111111111x----
 
+#verifica se um valor é negativo
 BNEG0: alu := ac; if n then goto BNEG2;                        # 111111111110----                 
 BNEG1: b:= 0; goto FETCH0;
 BNEG2: b:= 1; goto FETCH0;
                              
-
+#calcula o módulo de um valor
 MOD0: d := inv(ac);                                             # 111111111111----
 MOD1: d := d +1;
 MOD2: alu := d; if n then goto FETCH0;
 MOD3: ac := d; goto FETCH0;  
                                       
-                   
-
 HALT0: ac := lshift (1 + 1);                                     # 0000000000000000
 HALT1: ac := lshift (ac + 1); syscall; goto FETCH0;
-
-
-
-       
-
