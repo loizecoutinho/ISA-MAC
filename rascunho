@@ -40,8 +40,97 @@ DIV14: alu := a + d; if n then goto DIV17;
 DIV15: c := c +1;
 DIV16: a := a + d; goto DIV14;
 DIV17: a := c; goto FETCH0;
-                                     
+  
 
 
+#ac: tamanho do vetor X e Y
+#a : posição atual de endereço no vetor X
+#b : posição atual de endereço no vetor Y -- Já deve ser inicializado anteriormente.
+#c : valor dentro do endereço atual do vetor X
+#d : valor dentro do endereço atual do vetor Y
+#e : tamanho do vetor X e Y negativado
+#f : copia do registrador c ( usada na multiplicação) 
+# Microinstrução multiplica elemento x_i por y_i e guarda no elemento x_i
+VMULT0: mar := ir; rd;
+VMULT1: e := inv(ac); rd;
+VMULT2: e := e + 1;  
+VMULT3: c := mbr;
+VMULT4: mar := b; rd;
+VMULT5: a := band(ir,am);rd;
+VMULT6: d := mbr;
+VMULT7 : alu := d; if z then goto VMULT33;
+VMULT8 : alu := d; if n then goto VMULT16;
+VMULT9: d := inv(d);
+VMULT10: d := d +1;
+VMULT11: f := c;
+VMULT12: c := 0;
+VMULT13: c := c + f;
+VMULT14: d := d +1; if n then goto VMULT13;
+VMULT15: goto VMULT22;
+VMULT16: f:= c;
+VMULT17: c := 0;
+VMULT18: c := c+f;
+VMULT19: d := d +1; if n then goto  VMULT18;
+VMULT20: c := inv(c);
+VMULT21: c := c+1;
+VMULT22: mar := a; mbr := c; wr;
+VMULT23: wr;
+VMULT24: b := b +1;
+VMULT25: a := a +1;
+VMULT26: e := e+1; if n then goto VMULT28;
+VMULT27 : goto FETCH0;
+VMULT28: mar := a; rd;
+VMULT29 : rd;
+VMULT30 : c := mbr;
+VMULT31 : mar := b; rd;
+VMULT32 : rd;goto VMULT6;
+VMULT33: c := 0; goto VMULT22;  # Caso em que y_i é = 0
 
-ADDL, STOL ,LODL
+# + + = inv(d) , 
+# + - = pula inv(d), negativa o resultado
+# - - = pula inv(d), negativa o resultado
+# - + = inv(d) 
+
+ADDL, STOL ,LODL, SUBD
+# a = endereço do vetor x ( já instanciado anteriormente)
+# b = endereço do vetor aux ( já instanciado anteriormente)
+# ac = tamanho do vetor positivado
+# c = tamanho do vetor negativado
+VCOPY0: alu := ac; if z then goto FETCH0;
+VCOPY1: c := inv(ac);
+VCOPY2: c := c +1;
+VCOPY3: mar := a; rd;
+VCOPY4: rd;
+VCOPY5: mar := b; wr;
+VCOPY6: wr;
+VCOPY7: a := a +1;
+VCOPY8: b := b +1;
+VCOPY9: c := c +1; if n then goto VCOPY3;
+VCOPY10: goto FETCH0;
+
+
+DIV1: mar := ir; rd; DIV2: c := 0; rd; DIV3: alu := ac; if n then goto DIV6; # ac &lt; 0? DIV4: b := mbr; if n then goto DIV10; # ac &gt; 0 e b &lt; 0 DIV5: goto DIV12; # ac &gt; 0 e b &gt; 0 DIV6: ac := inv(ac); # Converte AC para positivo (|AC|) DIV7: ac := ac + 1; DIV8: b := mbr; if n then goto DIV16; # ac &lt; 0 e b &lt; 0 DIV9: goto DIV18; # ac &lt; 0 e b &gt; 0 DIV10: ac := ac + b; if n then goto DIV22; # Quadrante (+ / -) DIV11: c := c + (-1); goto DIV10; DIV12: b := inv(b); # Quadrante (+ / +) DIV13: b := b + 1; DIV14: ac := ac + b; if n then goto DIV22; DIV15: c := c + 1; goto DIV14; DIV16: ac := ac + b; if n then goto DIV22; # Quadrante (- / -) DIV17: c := c + 1; goto DIV16; DIV18: b := inv(b); # Quadrante (- / +) DIV19: b := b + 1; DIV20: ac := ac + b; if n then goto DIV22; # Adicionado o destino DIV22 DIV21: c := c + (-1); goto DIV20; DIV22: ac := c; goto 0;
+
+DIV1:mar:=ir;rd;
+DIV2:c := 0;rd;
+DIV3:alu := ac; if n then goto DIV6; 
+DIV4:b := mbr; if n then goto DIV10; 
+DIV5: goto DIV12 ; 
+DIV6: ac := inv(ac); 
+DIV7: ac := ac +1; 
+DIV8: b:=mbr; if n then goto DIV16;
+DIV9: goto DIV18 ; 
+DIV10: ac := ac +b; if n then goto DIV22; 
+DIV11: c := c +(-1); goto DIV10;
+DIV12: b :=inv(b); 
+DIV13: b := b+1; 
+DIV14: ac := ac +b; if n then goto DIV22; 
+DIV15: c := c +1; goto DIV14;
+DIV16: ac := ac +b; if n then goto DIV22; 
+DIV17: c := c +1; goto DIV16;
+DIV18: b := inv(b); 
+DIV19: b := b+1; 
+DIV20: ac := ac +b; if n then goto DIV22;
+DIV21: c := c+ (-1); goto DIV20;
+DIV22: ac := c; goto 0;
+

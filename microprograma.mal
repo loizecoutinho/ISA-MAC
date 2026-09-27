@@ -17,16 +17,61 @@ LODD2: ac := mbr; goto FETCH0;
 STOD0: mar := ir; mbr := ac; wr;                                # 0001------------
 STOD1: wr; goto FETCH0;
 
-DECOD5: alu := tir; if n then goto SUBD0;                       # 001x------------
+DECOD5: alu := tir; if n then goto VMULT0;                       # 001x------------
 
 ADDD0: mar := ir; rd;                                           # 0010------------
 ADDD1: rd;
 ADDD2: ac := mbr + ac; goto FETCH0;
 
-SUBD0: mar := ir; rd;                                           # 0011------------
-SUBD1: ac := ac + 1; rd;
-SUBD2: f := inv (mbr);
-SUBD3: ac := ac + f; goto FETCH0;
+#ac: tamanho do vetor X e Y
+#a : posição atual de endereço no vetor X
+#b : posição atual de endereço no vetor Y -- Já deve ser inicializado anteriormente.
+#c : valor dentro do endereço atual do vetor X
+#d : valor dentro do endereço atual do vetor Y
+#e : tamanho do vetor X e Y negativado
+#f : copia do registrador c ( usada na multiplicação) 
+# Microinstrução multiplica elemento x_i por y_i e guarda no elemento x_i
+VMULT0: mar := ir; rd;                              # 0011------------
+VMULT1: e := inv(ac); rd;
+VMULT2: e := e + 1;  
+VMULT3: c := mbr;
+VMULT4: mar := b; rd;
+VMULT5: a := band(ir,amask);rd;
+VMULT6: d := mbr;
+VMULT7 : alu := d; if z then goto VMULT33;
+VMULT8 : alu := d; if n then goto VMULT16;
+VMULT9: d := inv(d);
+VMULT10: d := d +1;
+VMULT11: f := c;
+VMULT12: c := 0;
+VMULT13: c := c + f;
+VMULT14: d := d +1; if n then goto VMULT13;
+VMULT15: goto VMULT22;
+VMULT16: f:= c;
+VMULT17: c := 0;
+VMULT18: c := c+f;
+VMULT19: d := d +1; if n then goto  VMULT18;
+VMULT20: c := inv(c);
+VMULT21: c := c+1;
+VMULT22: mar := a; mbr := c; wr;
+VMULT23: wr;
+VMULT24: b := b +1;
+VMULT25: a := a +1;
+VMULT26: e := e+1; if n then goto VMULT28;
+VMULT27 : goto FETCH0;
+VMULT28: mar := a; rd;
+VMULT29 : rd;
+VMULT30 : c := mbr;
+VMULT31 : mar := b; rd;
+VMULT32 : rd;goto VMULT6;
+VMULT33: c := 0; goto VMULT22;  # Caso em que y_i é = 0
+
+# + + = inv(d) , 
+# + - = pula inv(d), negativa o resultado
+# - - = pula inv(d), negativa o resultado
+# - + = inv(d) 
+                                           # 0011------------
+
 
 DECOD6: tir := lshift (tir); if n then goto DECOD8;             # 01x-------------
 DECOD7: alu := tir; if n then goto JZER0;                       # 010x------------
@@ -67,41 +112,50 @@ MULT15: a := inv(a);
 MULT16: a := a +1;
 MULT17: ac := a; goto MULT5;
 
-#divisão
-DIV0: b := lshift(a);                    # 1001------------
-DIV1: a := lshift(a+a);
-DIV2: a := lshift(a);
-DIV3: a := a +b;
-DIV4: b := lshift(a);
-DIV5: a := lshift(a+a);
-DIV6: a := lshift(a);
-DIV7: a := a +b;
-DIV8: mar := ir; rd;
-DIV9: rd;
-DIV10: ac := mbr;
-DIV11: c := 0;
-DIV12: d := inv(ac);
-DIV13: d := d + 1;
-DIV14: alu := a + d; if n then goto DIV17;
-DIV15: c := c +1;
-DIV16: a := a + d; goto DIV14;
-DIV17: a := c; goto FETCH0;                                      
+# ac = ac/m[x]
+DIV0:mar:=ir;rd;  # 1001------------
+DIV1:c := 0;rd;
+DIV2:alu := ac; if n then goto DIV5; 
+DIV3:b := mbr; if n then goto DIV9; 
+DIV4: goto DIV11 ; 
+DIV5: ac := inv(ac); 
+DIV6: ac := ac +1; 
+DIV7: b:=mbr; if n then goto DIV15;
+DIV8: goto DIV17 ; 
+DIV9: ac := ac +b; if n then goto DIV21; 
+DIV10: c := c +(-1); goto DIV9;
+DIV11: b :=inv(b); 
+DIV12: b := b+1; 
+DIV13: ac := ac +b; if n then goto DIV21; 
+DIV14: c := c +1; goto DIV13;
+DIV15: ac := ac +b; if n then goto DIV21; 
+DIV16: c := c +1; goto DIV15;
+DIV17: b := inv(b); 
+DIV18: b := b+1; 
+DIV19: ac := ac +b; if n then goto DIV21;
+DIV20: c := c+ (-1); goto DIV19;
+DIV21: ac := c; goto FETCH0;                 
+                                    
 
 DECOD12: alu := tir; if n then goto VSUB0;                      # 101x------------
 
-#soma de valores de dentro de um vetor                          
-SUM0: mar := ir; rd;			# 1010------------
-SUM1: c := inv(ac); rd;
+# ac = tamanho do vetor positivado/ resultado final
+# a : posição de endereço atual do vetor
+# b : valor de endereço atual
+# c : tamanho do vetor negativado
+
+SUM0: mar:= ir; rd;   # 1010------------
+SUM1: c := inv(ac);rd;
 SUM2: c := c +1;
-SUM2: a := mbr;
-SUM3: b := ir;
-SUM4: b :=  b + 1;
-SUM5: mar := b; rd;
-SUM6: rd;
-SUM7: a := a + mbr;
-SUM8: c := c + 1;
-SUM9: alu:= c;if n then goto SUM4;
-SUM10: goto FETCH0;
+SUM3: ac := 0;
+SUM4: a := band(ir,amask);
+SUM5: b := mbr;
+SUM6: ac := ac +b;
+SUM7: a := a +1;
+SUM8: c := c +1; if n then goto SUM10;
+SUM9: goto FETCH0;
+SUM10: mar:= a;rd;
+SUM11: rd; goto SUM5;
 
 ###subtração de valores de um vetor por um imediato###
 #ac : tamanho do vetor ( positivo)
@@ -208,9 +262,23 @@ INSP1: sp := sp + f; goto FETCH0;
 
 DECOD23: tir := lshift (tir); if n then goto DECOD24;           # 1111111x--------
 
-DESP0: f := band (ir, smask);                                   # 11111110--------
-DESP1: f := inv (f);
-DESP2: f := f + 1; goto INSP1;
+# a = endereço do vetor x ( já instanciado anteriormente)
+# b = endereço do vetor aux ( já instanciado anteriormente)
+# ac = tamanho do vetor positivado
+# c = tamanho do vetor negativado
+VCOPY0: alu := ac; if z then goto FETCH0;            # 11111110--------
+VCOPY1: c := inv(ac);
+VCOPY2: c := c +1;
+VCOPY3: mar := a; rd;
+VCOPY4: rd;
+VCOPY5: mar := b; wr;
+VCOPY6: wr;
+VCOPY7: a := a +1;
+VCOPY8: b := b +1;
+VCOPY9: c := c +1; if n then goto VCOPY3;
+VCOPY10: goto FETCH0;
+                           
+
 
 DECOD24: tir := lshift (tir); if n then goto DECOD28;           # 11111111x-------
 DECOD25: tir := lshift (tir); if n then goto DECOD27;           # 111111110x------
