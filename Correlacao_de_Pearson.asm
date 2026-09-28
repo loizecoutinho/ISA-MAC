@@ -12,12 +12,16 @@
 .text
     # Calculo das médias
     # MEDIA X
+    LODD VET_X
+    SWAPA
     LODD TAM
+    VCEM
     SUM VET_X
     DIV TAM
     STOD MEDIA_X
   
     # MEDIA Y
+    
     LODD TAM
     SUM VET_Y
     DIV TAM
