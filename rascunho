@@ -110,7 +110,7 @@ VCOPY10: goto FETCH0;
 
 
 DIV1: mar := ir; rd; DIV2: c := 0; rd; DIV3: alu := ac; if n then goto DIV6; # ac &lt; 0? DIV4: b := mbr; if n then goto DIV10; # ac &gt; 0 e b &lt; 0 DIV5: goto DIV12; # ac &gt; 0 e b &gt; 0 DIV6: ac := inv(ac); # Converte AC para positivo (|AC|) DIV7: ac := ac + 1; DIV8: b := mbr; if n then goto DIV16; # ac &lt; 0 e b &lt; 0 DIV9: goto DIV18; # ac &lt; 0 e b &gt; 0 DIV10: ac := ac + b; if n then goto DIV22; # Quadrante (+ / -) DIV11: c := c + (-1); goto DIV10; DIV12: b := inv(b); # Quadrante (+ / +) DIV13: b := b + 1; DIV14: ac := ac + b; if n then goto DIV22; DIV15: c := c + 1; goto DIV14; DIV16: ac := ac + b; if n then goto DIV22; # Quadrante (- / -) DIV17: c := c + 1; goto DIV16; DIV18: b := inv(b); # Quadrante (- / +) DIV19: b := b + 1; DIV20: ac := ac + b; if n then goto DIV22; # Adicionado o destino DIV22 DIV21: c := c + (-1); goto DIV20; DIV22: ac := c; goto 0;
-
+# ac = ac/m[x]
 DIV1:mar:=ir;rd;
 DIV2:c := 0;rd;
 DIV3:alu := ac; if n then goto DIV6; 
@@ -133,4 +133,49 @@ DIV19: b := b+1;
 DIV20: ac := ac +b; if n then goto DIV22;
 DIV21: c := c+ (-1); goto DIV20;
 DIV22: ac := c; goto 0;
+
+
+# ac = tamanho do vetor positivado/ resultado final
+# a : posição de endereço atual do vetor
+# b : valor de endereço atual
+# c : tamanho do vetor negativado
+
+SUM0: mar:= ir; rd;
+SUM1: c := inv(ac);
+SUM2: c := c +1;
+SUM3: ac := 0;
+SUM4: a := band(ir,amask);
+SUM5: b := mbr;
+SUM6: ac := ac +b;
+SUM7: a := a +1;
+SUM8: c := c +1; if n then goto SUM10;
+SUM9: goto FETCH0;
+SUM10: mar:= a;rd;
+SUM11: rd; goto SUM5;
+
+# ac : tamanho do vetor positivado
+# c : tamanho do vetor negativado
+# a : posição de endereço atual do vetor
+# e, f : registradores para multiplicar por 100
+VCEM0: mar:=ir; rd;
+VCEM1:c := inv(ac);rd;
+VCEM2: c := c+1; 
+VCEM3: a := band(ir,amask);
+VCEM4: e := mbr;
+VCEM5: e := lshift(e+e); # e = x4
+VCEM6: f := e;
+VCEM7: e := lshift(e+e); # e = x16
+VCEM8: e := lshift(e); # e = x32
+VCEM9: f := e+f; # f = x36
+VCEM10: e := lshift(e); # e = x64
+VCEM11: e := e +f; # e = x100
+VCEM12: mar := a;mbr:= e; wr;
+VCEM13: a := a+1;wr;
+VCEM14: c := c+1; if n then goto VCEM16;
+VCEM15: goto FETCH0;
+VCEM16: mar:=a;rd;
+VCEM17: rd; goto VCEM4;
+
+
+
 

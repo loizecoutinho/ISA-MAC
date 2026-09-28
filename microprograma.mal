@@ -237,8 +237,29 @@ POPI2: mar := ac; wr; goto STOD1;
 
 DECOD19: alu := tir; if n then goto POP0;                       # 111101x---------
 
-PUSH0: sp := sp + (-1);                                         # 1111010---------
-PUSH1: mar := sp; mbr := ac; wr; goto STOD1;
+# ac : tamanho do vetor positivado
+# c : tamanho do vetor negativado
+# a : posição de endereço atual do vetor ( ja anexada)
+# e, f : registradores para multiplicar por 100
+VCEM0: c := inv(ac);        # 1111010---------
+VCEM1: c := c +1;
+VCEM2: mar := a;rd;
+VCEM3: rd;
+VCEM4: e := mbr;
+VCEM5: e := lshift(e+e); # e = x4
+VCEM6: f := e;
+VCEM7: e := lshift(e+e); # e = x16
+VCEM8: e := lshift(e); # e = x32
+VCEM9: f := e+f; # f = x36
+VCEM10: e := lshift(e); # e = x64
+VCEM11: e := e +f; # e = x100
+VCEM12: mar := a;mbr:= e; wr;
+VCEM13: wr;
+VCEM14: a := a +1;
+VCEM15: c := c+1; if n then goto VCEM2;
+VCEM15: goto FETCH0;
+                                                              # 1111010---------
+
 
 POP0: mar := sp; sp := sp + 1; rd;                              # 1111011---------
 POP1: rd;
@@ -256,9 +277,12 @@ SWAP1: sp := ac;
 SWAP2: ac := f; goto FETCH0;
 
 DECOD22: tir := lshift (tir); if n then goto DECOD23;           # 111111x---------
+   
 
 INSP0: f := band (ir, smask);                                   # 1111110---------
 INSP1: sp := sp + f; goto FETCH0;
+   
+
 
 DECOD23: tir := lshift (tir); if n then goto DECOD24;           # 1111111x--------
 
