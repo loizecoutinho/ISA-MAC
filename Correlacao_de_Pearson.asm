@@ -1,25 +1,35 @@
 .data
-    	VET_X: .word  1,2,9
-    	VET_Y: .word -2,3,6
-    	TAM: .word 3
-    	E_NEG1: .space 0 #VERIFICA SE SUM_XY É NEG
-	E_NEG2: .space 0 #VERIFICA SE PROD_VQUADA É NEG
-    	VET_AUX_X: .word 0,0,0
-    	VET_AUX_Y: .word 0,0,0
-    	RESULTADO: .space 0
-    	MEDIA_X: .word 0
-    	MEDIA_Y: .word 0
-	SUM_XY: .word 0
+    	
+	VET_X: .word  1,2,9
+    VET_Y: .word -2,3,6
+    VET_AUX_X: .word 0,0,0
+    VET_AUX_Y: .word 0,0,0
 	VET_AUX_MULT: .word 0,0,0
 	VQUAD_X: .word 0,0,0
 	VQUAD_Y: .word 0,0,0
+    	
+	TAM: .word 3
+
+    E_NEG1: .word 0 #VERIFICA SE SUM_XY É NEG
+	E_NEG2: .word 0 #VERIFICA SE PROD_VQUADA É NEG
+
+   	RESULTADO: .space 0
+
+  	MEDIA_X: .word 0
+   	MEDIA_Y: .word 0
+	SUM_XY: .word 0
 	SUM_X_VQUAD: .word 0
 	SUM_Y_VQUAD: .word 0
 	PROD_VQUAD: .word 0
+
 	PEARSON_R: .word 0 #AO QUADRADO
+
 	NUMERADOR: .word 0
 	DENOMINADOR: .word 0
-	CONST_100: .word 100
+
+	CONST_25: .word 25
+	CONST_4: .word 4
+
 	MSG_POS: .asciz "O coeficiente de pearson e positivo\n"
 	MSG_NEG: .asciz "O coeficiente de pearson e negativo\n"
 
@@ -138,7 +148,12 @@
 
 ####### DIVISÃO######
 	LODD NUMERADOR
-	MULT CONST_100
+	MULT CONST_25
+	STOD NUMERADOR
+	LODD DENOMINADOR
+	DIV CONST_4
+	STOD DENOMINADOR
+	LODD NUMERADOR
 	DIV DENOMINADOR
 	STOD PEARSON_R
 
