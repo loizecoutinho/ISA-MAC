@@ -30,6 +30,7 @@ ADDD2: ac := mbr + ac; goto FETCH0;
 #d : valor dentro do endereço atual do vetor Y
 #e : tamanho do vetor X e Y negativado
 #f : copia do registrador c ( usada na multiplicação) 
+#valor final é armazenado na RAM(vetor é sobreposto pelo novo valor)
 # Microinstrução multiplica elemento x_i por y_i e guarda no elemento x_i
 VMULT0: mar := ir; rd;                              # 0011------------
 VMULT1: e := inv(ac); rd;
@@ -101,40 +102,42 @@ MULT4: c := inv (c);
 MULT5: c := c+1;
 MULT6: a := a+ac;
 MULT7: c := c + 1; if n then goto MULT6;
-MULT8: goto FETCH0;
-MULT9: alu := a; if n then goto MULT15;
+MULT8: ac:=a; goto FETCH0;
+MULT9: alu := a; if n then goto MULT16;
 MULT10: c := c+1;
 MULT11: a := a + ac;
 MULT12: c := c +1; if n then goto MULT11;
 MULT13: a := inv(a);
-MULT14: a := a+1; goto FETCH0;
-MULT15: a := inv(a);
-MULT16: a := a +1;
-MULT17: ac := a; goto MULT5;
+MULT14: a := a+1; 
+MULT15:	ac:=a; goto FETCH0;
+MULT16: a := inv(a);
+MULT17: a := a +1;
+MULT18: ac := a; goto MULT5;
 
 # ac = ac/m[x]
 DIV0:mar:=ir;rd;  # 1001------------
 DIV1:c := 0;rd;
-DIV2:alu := ac; if n then goto DIV5; 
-DIV3:b := mbr; if n then goto DIV9; 
-DIV4: goto DIV11 ; 
-DIV5: ac := inv(ac); 
-DIV6: ac := ac +1; 
-DIV7: b:=mbr; if n then goto DIV15;
-DIV8: goto DIV17 ; 
-DIV9: ac := ac +b; if n then goto DIV21; 
-DIV10: c := c +(-1); goto DIV9;
-DIV11: b :=inv(b); 
-DIV12: b := b+1; 
-DIV13: ac := ac +b; if n then goto DIV21; 
-DIV14: c := c +1; goto DIV13;
-DIV15: ac := ac +b; if n then goto DIV21; 
-DIV16: c := c +1; goto DIV15;
-DIV17: b := inv(b); 
-DIV18: b := b+1; 
-DIV19: ac := ac +b; if n then goto DIV21;
-DIV20: c := c+ (-1); goto DIV19;
-DIV21: ac := c; goto FETCH0;                 
+DIV2:alu := ac; if n then goto DIV6; 
+DIV3:b := mbr;if z then goto FETCH0; 
+DIV4: if n then goto DIV10; 
+DIV5: goto DIV12 ; 
+DIV6: ac := inv(ac); 
+DIV7: ac := ac +1; 
+DIV8: b:=mbr; if n then goto DIV16;
+DIV9: goto DIV17 ; 
+DIV10: ac := ac +b; if n then goto DIV22; 
+DIV11: c := c +(-1); goto DIV10;
+DIV12: b :=inv(b); 
+DIV13: b := b+1; 
+DIV14: ac := ac +b; if n then goto DIV22; 
+DIV15: c := c +1; goto DIV14;
+DIV16: ac := ac +b; if n then goto DIV22; 
+DIV17: c := c +1; goto DIV16;
+DIV18: b := inv(b); 
+DIV19: b := b+1; 
+DIV20: ac := ac +b; if n then goto DIV22;
+DIV21: c := c+ (-1); goto DIV20;
+DIV22: ac := c; goto FETCH0;                 
                                     
 
 DECOD12: alu := tir; if n then goto VSUB0;                      # 101x------------
@@ -143,7 +146,7 @@ DECOD12: alu := tir; if n then goto VSUB0;                      # 101x----------
 # a : posição de endereço atual do vetor
 # b : valor de endereço atual
 # c : tamanho do vetor negativado
-
+#ac recebe valor final
 SUM0: mar:= ir; rd;   # 1010------------
 SUM1: c := inv(ac);rd;
 SUM2: c := c +1;
@@ -162,15 +165,16 @@ SUM11: rd; goto SUM5;
 #c : tamanho do vetor (negativado)
 #b : posição atual de endereço no vetor 
 #a : valor dentro do endereço atual
-#f : imediato 
-VSUB0: mar := ir; rd;             # 1010------------
+#d : imediato 
+#armazenado na memoria RAM(sobrescrevendo os elementos originais no vetor)
+VSUB0: mar := ir; rd;             # 1011------------
 VSUB1: c := inv(ac);rd;
 VSUB2: c := c +1;
-VSUB3: f := inv(f);
-VSUB4: f := f +1;
+VSUB3: d := inv(d);
+VSUB4: d := d +1;
 VSUB5: b := ir;
 VSUB6: a := mbr;
-VSUB7: a := a + f;
+VSUB7: a := a + d;
 VSUB8: mar := b; mbr := a; wr;
 VSUB9: b := b+1;wr;
 VSUB10: mar := b; rd;
@@ -196,6 +200,7 @@ DECOD15: tir := lshift (tir); if n then goto DECOD16;           # 111x----------
 #c = valor presente no endereço da posição atual no vetor
 #d = contador do laço interno (multiplicação)
 #e = preserva o valor presente no endereço da posição atual
+#valor final armazenado na memoria RAM(vetor original é sobreposto)
 VQUAD0: mar := ir; rd;                   # 1110------------
 VQUAD1: a := inv(ac); rd;
 VQUAD2: a := a +1;
@@ -237,29 +242,8 @@ POPI2: mar := ac; wr; goto STOD1;
 
 DECOD19: alu := tir; if n then goto POP0;                       # 111101x---------
 
-# ac : tamanho do vetor positivado
-# c : tamanho do vetor negativado
-# a : posição de endereço atual do vetor ( ja anexada)
-# e, f : registradores para multiplicar por 100
-VCEM0: c := inv(ac);        # 1111010---------
-VCEM1: c := c +1;
-VCEM2: mar := a;rd;
-VCEM3: rd;
-VCEM4: e := mbr;
-VCEM5: e := lshift(e+e); # e = x4
-VCEM6: f := e;
-VCEM7: e := lshift(e+e); # e = x16
-VCEM8: e := lshift(e); # e = x32
-VCEM9: f := e+f; # f = x36
-VCEM10: e := lshift(e); # e = x64
-VCEM11: e := e +f; # e = x100
-VCEM12: mar := a;mbr:= e; wr;
-VCEM13: wr;
-VCEM14: a := a +1;
-VCEM15: c := c+1; if n then goto VCEM2;
-VCEM15: goto FETCH0;
-                                                              # 1111010---------
-
+PUSH0: sp := sp + (-1);                                         # 1111010---------
+PUSH1: mar := sp; mbr := ac; wr; goto STOD1;
 
 POP0: mar := sp; sp := sp + 1; rd;                              # 1111011---------
 POP1: rd;
@@ -290,7 +274,7 @@ DECOD23: tir := lshift (tir); if n then goto DECOD24;           # 1111111x------
 # b = endereço do vetor aux ( já instanciado anteriormente)
 # ac = tamanho do vetor positivado
 # c = tamanho do vetor negativado
-VCOPY0: alu := ac; if z then goto FETCH0;            # 11111110--------
+VCOPY0: alu := ac; if z then goto FETCH0;            # 1111111000000000
 VCOPY1: c := inv(ac);
 VCOPY2: c := c +1;
 VCOPY3: mar := a; rd;
@@ -334,9 +318,10 @@ ECALL0: syscall; goto FETCH0;                                   # 11111111110---
 DECOD30: alu := tir; if n then goto MOD0;                      # 11111111111x----
 
 #verifica se um valor é negativo
-BNEG0: alu := ac; if n then goto BNEG2;                        # 111111111110----                 
-BNEG1: b:= 0; goto FETCH0;
-BNEG2: b:= 1; goto FETCH0;
+BNEG0: alu := ac; if n then goto BNEG2;				# 111111111110----
+BNEG1: ac:= 0; goto FETCH0;
+BNEG2: ac:= 1; goto FETCH0;
+                                         
                              
 #calcula o módulo de um valor
 MOD0: d := inv(ac);                                             # 111111111111----
