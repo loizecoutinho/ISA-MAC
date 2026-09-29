@@ -1,32 +1,179 @@
 .data
-    VET_X: .word  1,2,9
-    VET_Y: .word -2,3,6
-    TAM: .word 3
-    E_NEG: .space 0
-    VET_AUX: .word 0,0,0
-    VET_AUX1: .word 0,0,0
-    RESULTADO: .space 0
-    MEDIA_X: .word 0
-    MEDIA_Y: .word 0
+    	VET_X: .word  1,2,9
+    	VET_Y: .word -2,3,6
+    	TAM: .word 3
+    	E_NEG1: .space 0 #VERIFICA SE SUM_XY É NEG
+	E_NEG2: .space 0 #VERIFICA SE PROD_VQUADA É NEG
+    	VET_AUX_X: .word 0,0,0
+    	VET_AUX_Y: .word 0,0,0
+    	RESULTADO: .space 0
+    	MEDIA_X: .word 0
+    	MEDIA_Y: .word 0
+	SUM_XY: .word 0
+	VET_AUX_MULT: .word 0,0,0
+	VQUAD_X: .word 0,0,0
+	VQUAD_Y: .word 0,0,0
+	SUM_X_VQUAD: .word 0
+	SUM_Y_VQUAD: .word 0
+	PROD_VQUAD: .word 0
+	PEARSON_R: .word 0 #AO QUADRADO
+	NUMERADOR: .word 0
+	DENOMINADOR: .word 0
+	CONST_100: .word 100
+	MSG_POS: .asciz "O coeficiente de pearson e positivo\n"
+	MSG_NEG: .asciz "O coeficiente de pearson e negativo\n"
 
 .text
-    # Calculo das médias
-    # MEDIA X
-    LODD VET_X
-    SWAPA
-    LODD TAM
-    VCEM
-    SUM VET_X
-    DIV TAM
-    STOD MEDIA_X
-  
-    # MEDIA Y
-    
-    LODD TAM
-    SUM VET_Y
-    DIV TAM
-    STOD MEDIA_Y
-    SWAPA
-    LOCO 1
-    ECALL
+ ######### Calculo das médias##########
+    	# MEDIA X
+    	LOCO VET_X
+    	SWAPA
+    	LODD TAM
+    	SUM VET_X   
+    	DIV TAM
+    	STOD MEDIA_X
+    	SWAPA 
 
+    	# MEDIA Y
+    	LOCO VET_Y
+    	SWAPA
+    	LODD TAM
+    	SUM VET_Y
+    	DIV TAM
+    	STOD MEDIA_Y
+    	SWAPA
+
+##########SUBTRAÇÃO DOS VALORES DO VETOR PELA MÉDIA#############
+	#(xi - media_X)
+	LOCO VET_X
+	SWAPA
+	LOCO VET_AUX_X
+	SWAPB
+	LODD TAM
+	VCOPY 
+	LODD MEDIA_X
+	SWAPD
+	LODD TAM
+	VSUB VET_AUX_X
+
+	#(xi - media_Y)
+	LOCO VET_Y
+	SWAPA
+	LOCO VET_AUX_Y
+	SWAPB
+	LODD TAM
+	VCOPY 
+	LODD MEDIA_Y
+	SWAPD
+	LODD TAM
+	VSUB VET_AUX_Y
+##########MULTIPLICAÇÃO DE (xi - media_X)*(xi - media_Y)###########
+	#(xi - media_X)*(xi - media_Y)
+	LOCO VET_AUX_X
+	SWAPA
+	LOCO VET_AUX_MULT
+	SWAPB
+	LODD TAM
+	VCOPY
+	SWAPA
+	LOCO VET_AUX_Y
+	SWAPB
+	LODD TAM
+	VMULT VET_AUX_MULT
+###########SOMA DA MULTIPLICAÇÃO DOS VETORES###############
+	#SUM (xi - media_X)*(xi - media_Y)
+	LODD TAM
+	SUM VET_AUX_MULT
+	STOD SUM_XY
+	BNEG
+	STOD E_NEG1
+##########ELEVAR AO QUADRADO OS VALORES###################
+	#(xi - media_X)^2
+	LOCO VET_AUX_X
+	SWAPA
+	LOCO VQUAD_X
+	SWAPB
+	LODD TAM
+	VCOPY
+
+	LODD TAM
+	VQUAD VQUAD_X
+
+	#(xi - media_Y)^2
+	LOCO VET_AUX_Y
+	SWAPA
+	LOCO VQUAD_Y
+	SWAPB
+	LODD TAM
+	VCOPY
+
+	LODD TAM
+	VQUAD VQUAD_Y
+
+########SOMA DOS VALORES AO QUADRADO DO VETOR###############
+	#SUM (xi - media_X)^2
+	LODD TAM
+	SUM VQUAD_X
+	STOD SUM_X_VQUAD
+
+	#SUM (xi - media_Y)^2
+	LODD TAM
+	SUM VQUAD_Y
+	STOD SUM_Y_VQUAD
+
+########PROD_VQUAD = SUM_X_VQUAD * SUM_Y_VQUAD########
+	LODD SUM_X_VQUAD 
+	MULT SUM_Y_VQUAD 
+	STOD PROD_VQUAD
+	BNEG 
+	STOD E_NEG2
+
+#######ELEVAR TODOS OS VALORES AO QUADRADO(MULT)(A*A)#######
+	LODD SUM_XY
+	MULT SUM_XY
+	STOD NUMERADOR
+
+	LODD PROD_VQUAD
+	STOD DENOMINADOR
+
+####### DIVISÃO######
+	LODD NUMERADOR
+	MULT CONST_100
+	DIV DENOMINADOR
+	STOD PEARSON_R
+
+#######VERIFICA VALORES######
+	LODD E_NEG1
+	JZER NEG1_POS
+	JUMP NEG1_NEG
+	
+NEG1_NEG:
+	LODD E_NEG2
+	JZER MSG_E_NEG
+	JUMP MSG_E_POS 
+
+NEG1_POS:
+	LODD E_NEG2
+	JZER MSG_E_POS
+	JUMP MSG_E_NEG
+
+MSG_E_POS:
+	LOCO MSG_POS
+	SWAPA
+	LOCO 3
+	ECALL
+	JUMP FIM
+MSG_E_NEG:
+	LOCO MSG_NEG
+	SWAPA
+	LOCO 3
+	ECALL
+	JUMP FIM	
+
+########IMPRIME PEARSON_R######
+FIM:
+	LODD PEARSON_R
+	SWAPA
+	LOCO 1
+	ECALL
+	HALT #FIM
