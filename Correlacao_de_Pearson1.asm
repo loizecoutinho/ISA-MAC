@@ -1,22 +1,21 @@
 .data
     	
 	VET_X: .word  1,2,9
-    VET_Y: .word -2,3,6
-    VET_AUX_X: .word 0,0,0
-    VET_AUX_Y: .word 0,0,0
+    	VET_Y: .word -2,3,6
+    	VET_AUX_X: .word 0,0,0
+    	VET_AUX_Y: .word 0,0,0
 	VET_AUX_MULT: .word 0,0,0
 	VQUAD_X: .word 0,0,0
 	VQUAD_Y: .word 0,0,0
+	
+	E_NEG: .word 0
     	
 	TAM: .word 3
 
-    E_NEG1: .word 0 #VERIFICA SE SUM_XY É NEG
-	E_NEG2: .word 0 #VERIFICA SE PROD_VQUADA É NEG
+    	RESULTADO: .space 0
 
-   	RESULTADO: .space 0
-
-  	MEDIA_X: .word 0
-   	MEDIA_Y: .word 0
+    	MEDIA_X: .word 0
+    	MEDIA_Y: .word 0
 	SUM_XY: .word 0
 	SUM_X_VQUAD: .word 0
 	SUM_Y_VQUAD: .word 0
@@ -26,12 +25,21 @@
 
 	NUMERADOR: .word 0
 	DENOMINADOR: .word 0
+	RES_QUADRADA: .word 0
+	NUM_IMPAR: .word -1
 
 	CONST_25: .word 25
 	CONST_4: .word 4
+	CONST_NEG_100: .word -100
+	CONST_100: .word 100	
+	CONSTANTE_NEGATIVA: .word -2
 
-	MSG_POS: .asciz "O coeficiente de pearson e positivo\n"
-	MSG_NEG: .asciz "O coeficiente de pearson e negativo\n"
+	MSG_POS_PERF: .asciz "O coeficiente de pearson e uma correlacao positiva perfeita. Numero com duas casas decimais\n"
+    	MSG_NEG_PERF: .asciz "O coeficiente de pearson e uma correlacao negativa perfeita. Numero com duas casas decimais\n"
+	MSG_POS: .asciz "O coeficiente de pearson e uma correlacao positiva. Numero em decimal\n"
+	MSG_NEG: .asciz "O coeficiente de pearson e uma correlacao negativa. Numero em decimal\n"
+	MSG_NAO_CORRELACAO: .asciz "Nao ha correlacao linear"
+
 
 .text
  ######### Calculo das médias##########
@@ -95,8 +103,7 @@
 	LODD TAM
 	SUM VET_AUX_MULT
 	STOD SUM_XY
-	BNEG
-	STOD E_NEG1
+
 ##########ELEVAR AO QUADRADO OS VALORES###################
 	#(xi - media_X)^2
 	LOCO VET_AUX_X
@@ -135,8 +142,6 @@
 	LODD SUM_X_VQUAD 
 	MULT SUM_Y_VQUAD 
 	STOD PROD_VQUAD
-	BNEG 
-	STOD E_NEG2
 
 #######ELEVAR TODOS OS VALORES AO QUADRADO(MULT)(A*A)#######
 	LODD SUM_XY
@@ -157,33 +162,93 @@
 	DIV DENOMINADOR
 	STOD PEARSON_R
 
-#######VERIFICA VALORES######
-	LODD E_NEG1
-	JZER NEG1_POS
-	JUMP NEG1_NEG
+
+#######VERIFICA SUM_XY É NEG OU POS######
+	LODD SUM_XY
+	BNEG
+    	STOD E_NEG
+########CALCULO RAIZ QUADRADA PEARSON_R########
+# Res_quadrada =  armazena o resultado da raiz quadrada
+# num_impar =  armazena numero impar. Inicia com 1 
+    	LODD PEARSON_R
+	MULT CONST_100
+	STOD PEARSON_R	
+RAIZ_QUADRADA_LOOP:
+        LODD PEARSON_R
+    	ADDD NUM_IMPAR
+    	JNEG RAIZ_QUADRADA_FIM
+
+    	STOD PEARSON_R
 	
-NEG1_NEG:
-	LODD E_NEG2
-	JZER MSG_E_NEG
-	JUMP MSG_E_POS 
+	LOCO 1
+    	ADDD RES_QUADRADA
+    	STOD RES_QUADRADA
 
-NEG1_POS:
-	LODD E_NEG2
-	JZER MSG_E_POS
-	JUMP MSG_E_NEG
+    	LODD CONSTANTE_NEGATIVA # -2
+    	ADDD NUM_IMPAR
+    	STOD NUM_IMPAR
 
-MSG_E_POS:
-	LOCO MSG_POS
-	SWAPA
-	LOCO 3
-	ECALL
-	JUMP FIM
-MSG_E_NEG:
-	LOCO MSG_NEG
-	SWAPA
-	LOCO 3
-	ECALL
-	JUMP FIM	
+    	JUMP RAIZ_QUADRADA_LOOP
+
+RAIZ_QUADRADA_FIM:
+    	LODD RES_QUADRADA
+    	STOD PEARSON_R
+
+VERIFICA_COEFICIENTE:
+	MOD
+    	STOD PEARSON_R
+    	JZER COEF_NAO_LINEAR
+    	ADDD CONST_NEG_100
+    	JZER COEF_PERFEITO
+    	JUMP COEF_CORRELACAO
+    
+COEF_PERFEITO:
+    	LODD E_NEG
+    	JZER COEF_PERFEITO_POSITIVO
+    	JUMP COEF_PERFEITO_NEGATIVO
+
+COEF_PERFEITO_POSITIVO:
+    	LOCO MSG_POS_PERF
+    	SWAPA
+    	LOCO 3 
+    	ECALL
+    	JUMP FIM
+
+COEF_PERFEITO_NEGATIVO:
+    	LOCO MSG_NEG_PERF
+    	SWAPA
+    	LOCO 3 
+    	ECALL
+    	JUMP FIM
+
+    
+COEF_NAO_LINEAR:
+    	LOCO MSG_NAO_CORRELACAO
+    	SWAPA
+    	LOCO 3 
+    	ECALL
+    	JUMP FIM
+
+COEF_CORRELACAO:
+    	LODD E_NEG
+    	JZER COEF_CORRELACAO_POSITIVA
+    	JUMP COEF_CORRELACAO_NEGATIVA
+
+COEF_CORRELACAO_POSITIVA:
+    	LOCO MSG_POS
+    	SWAPA
+    	LOCO 3 
+    	ECALL
+    	JUMP FIM
+
+COEF_CORRELACAO_NEGATIVA:
+    	LOCO MSG_NEG
+    	SWAPA
+    	LOCO 3 
+    	ECALL
+    	JUMP FIM
+
+	
 
 ########IMPRIME PEARSON_R######
 FIM:
